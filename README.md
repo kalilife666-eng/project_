@@ -1,0 +1,1 @@
+this is a tool used for charter and human rights case law analysis for criminal court and civil/family/humanrights law research for canadians and possibly even the un if they so choose to audit the fkn gvt
