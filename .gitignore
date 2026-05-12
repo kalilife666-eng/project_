@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+venv/
+.venv/
+build/
+dist/
+*.egg-info/
+
+# Android
+android/.gradle/
+android/app/build/
+android/local.properties
+android/captures/
+.externalNativeBuild/
+.cxx/
+*.iml
+.idea/
+
+# System
+.DS_Store
+Thumbs.db
+
+# Local runtime state
+.last_document_state.json
+*.local.json
+*_full_results*.json
+*.swp
+*.swo
+human_rights_guard/.data/
+human_rights_guard/
