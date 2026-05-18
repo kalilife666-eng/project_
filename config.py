@@ -78,8 +78,8 @@ CHARTER_SECTIONS = {
                       "arbitrary", "overbreadth", "grossly disproportionate", "procedural fairness",
                       "duty of fairness", "natural justice", "deprivation", "detention",
                       "imprisonment", "bodily integrity", "medical treatment", "mental health",
-                      "risk of harm", "stigma", "serious illness", "arrest report", "police report",
-                      "booking report", "custody report", "incident report", "statement"],
+                      "risk of harm", "stigma", "serious illness", "custody record", "incident record",
+                      "intake record", "case record", "event record", "statement"],
         "tests": {
             "deprivation": "Is there a deprivation of life, liberty, or security of the person?",
             "life_liberty_security": "Which interest is engaged — life, liberty, or security of the person?",
@@ -89,9 +89,9 @@ CHARTER_SECTIONS = {
             "gross_disproportionality": "Is the law or action grossly disproportionate?",
             "procedural_fairness": "Are procedures fair (duty of fairness/natural justice)?",
             "vagueness": "Is the law or decision vague or uncertain?",
-            "arrest_report_present": "Does the document contain an arrest report or similar police documentation?",
-            "liberty_impact": "Does the arrest report demonstrate a direct impact on the individual's liberty?",
-            "grounds_for_arrest": "Are there objectively reasonable grounds for the arrest described in the report?"
+            "arrest_report_present": "Does the document contain a custody or incident record tied to the event?",
+            "liberty_impact": "Does the record demonstrate a direct impact on the individual's liberty?",
+            "grounds_for_arrest": "Are there objectively reasonable grounds described in the record?"
         }
     },
     "8": {
@@ -172,13 +172,13 @@ CHARTER_SECTIONS = {
         }
     },
     "11(c)": {
-        "title": "Right Not to Be Compelled as Witness",
-        "description": "Any person charged with an offence has the right not to be compelled to be a witness in proceedings against that person.",
-        "keywords": ["compelled witness", "testify against self", "self-incrimination",
+        "title": "Right Not to Be Compelled as Participant",
+        "description": "Any person charged with an offence has the right not to be compelled to participate as a source party in proceedings against that person.",
+        "keywords": ["compelled participant", "testify against self", "self-incrimination",
                       "right to silence", "compelled testimony", "immunity"],
         "tests": {
             "is_charged": "Has the person been charged with an offence?",
-            "compelled": "Is the person being compelled to be a witness against themselves?",
+            "compelled": "Is the person being compelled to participate against themselves?",
             "use_immunity": "Is adequate use immunity or derivative use immunity provided?"
         }
     },
@@ -209,18 +209,18 @@ CHARTER_SECTIONS = {
     },
     "13": {
         "title": "Right Against Self-Incrimination",
-        "description": "A witness shall not be incriminated by any evidence given in proceedings.",
+        "description": "A source party shall not be incriminated by any evidence given in proceedings.",
         "keywords": ["self-incrimination", "incriminating evidence", "subsequent prosecution",
                       "use immunity", "derivative use immunity", "testimony used against"],
         "tests": {
-            "is_witness": "Was the person a witness in proceedings?",
-            "incriminated": "Is the evidence given being used to incriminate the witness in other proceedings?",
+            "is_witness": "Was the person a source party in proceedings?",
+            "incriminated": "Is the evidence given being used to incriminate the source party in other proceedings?",
             "use_immunity": "Is adequate protection against self-incrimination provided?"
         }
     },
     "14": {
         "title": "Right to an Interpreter",
-        "description": "A party or witness in any proceedings who does not understand or speak the language in which the proceedings are conducted has the right to the assistance of an interpreter.",
+        "description": "A participant in any proceedings who does not understand or speak the language in which the proceedings are conducted has the right to the assistance of an interpreter.",
         "keywords": ["interpreter", "translation", "language", "understanding",
                       "deaf", "sign language", "proceedings", "communication", "comprehension"],
         "tests": {
@@ -307,7 +307,7 @@ OAKES_TEST = {
 OAKS_TEST = OAKES_TEST  # Compatibility alias for misspelling in main.py
 
 # Application Settings
-APP_TITLE = "Project Phoenix — Authoritative Charter Analysis"
+APP_TITLE = "phoenix_gemini"
 APP_VERSION = "1.0.0"
 WINDOW_WIDTH = 1400
 WINDOW_HEIGHT = 900

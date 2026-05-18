@@ -58,10 +58,10 @@ LOGO_ICON_PATH = os.path.join(BASE_DIR, "assets", "project_phoenix_logo_icon.png
 
 def _about_dialog():
     messagebox.showinfo("About",
-        f"🛡️ project_phoenix\n"
+        f"🛡️ phoenix_gemini\n"
         f"Version {APP_VERSION}\n\n"
         f"RESEARCH AND STATISTICS TOOL ONLY\n\n"
-        f"project_phoenix is designed for legal research and statistical\n"
+        f"phoenix_gemini (powered by project_phoenix) is designed for legal research and statistical\n"
         f"identification of potential Charter\n"
         f"indicators. It does NOT constitute legal advice.\n\n"
         f"All results must be verified by a qualified professional."

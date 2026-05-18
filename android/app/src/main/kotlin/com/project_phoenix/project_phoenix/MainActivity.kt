@@ -13,8 +13,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
@@ -24,9 +27,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.zIndex
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import com.chaquo.python.PyObject
@@ -379,7 +386,7 @@ class MainActivity : ComponentActivity() {
             Python.start(AndroidPlatform(this))
         }
         setContent {
-            MaterialTheme {
+            MaterialTheme(colorScheme = DisclosureColorScheme) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     AnalyzerScreen()
                 }
@@ -421,6 +428,28 @@ fun AnalyzerScreen() {
     
     val sharedPreferences = context.getSharedPreferences("phoenix_prefs", Context.MODE_PRIVATE)
     var apiKey by remember { mutableStateOf(sharedPreferences.getString("canlii_api_key", "") ?: "") }
+    val textBoxColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = NeonGreen,
+        unfocusedTextColor = NeonGreen,
+        disabledTextColor = NeonGreen.copy(alpha = 0.55f),
+        cursorColor = NeonGreen,
+        focusedBorderColor = NeonGreen,
+        unfocusedBorderColor = NeonGreen.copy(alpha = 0.8f),
+        disabledBorderColor = NeonGreen.copy(alpha = 0.45f),
+        focusedLabelColor = NeonGreen,
+        unfocusedLabelColor = NeonGreen.copy(alpha = 0.85f),
+        focusedSupportingTextColor = NeonGreen.copy(alpha = 0.85f),
+        unfocusedSupportingTextColor = NeonGreen.copy(alpha = 0.7f),
+        focusedContainerColor = Color(0xFF0A0A0A),
+        unfocusedContainerColor = Color(0xFF0A0A0A),
+        disabledContainerColor = Color(0xFF0A0A0A)
+    )
+    val pillButtonColors = ButtonDefaults.buttonColors(
+        containerColor = Color.Black.copy(alpha = 0.86f),
+        contentColor = NeonGreen,
+        disabledContainerColor = Color.Black.copy(alpha = 0.75f),
+        disabledContentColor = NeonGreen.copy(alpha = 0.45f)
+    )
 
     fun performAnalysis(text: String) {
         if (text.isBlank() && selectedMediaPath == null) return
@@ -559,7 +588,7 @@ fun AnalyzerScreen() {
                         manualTranscriptText = ""
                         resultData = null
                         statusMessage = if (hasRecordAudioPermission.value) {
-                            "Media loaded (${selectedMediaKind}). Enter witness statement. If auto-transcription fails, paste transcript override."
+                            "Media loaded (${selectedMediaKind}). Enter supporting statement. If auto-transcription fails, paste transcript override."
                         } else {
                             "Media loaded (${selectedMediaKind}). Enable mic permission or paste transcript override before Analyze."
                         }
@@ -581,48 +610,138 @@ fun AnalyzerScreen() {
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Project Phoenix") }, actions = {
-                IconButton(onClick = { showNoticeDialog = true }) { Icon(Icons.Default.Info, "Notice") }
-                IconButton(onClick = { /* Settings dummy */ }) { Icon(Icons.Default.Settings, null) }
-            })
-        }
-    ) { padding ->
-        Column(modifier = Modifier.padding(padding).padding(16.dp).fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(id = R.drawable.phoenix_background),
+            contentDescription = "Phoenix background",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
             if (resultData == null) {
+                Text("phoenix_gemini", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.headlineSmall)
+                Text("Disclosure Analysis Tool", color = Color.White.copy(alpha = 0.85f), style = MaterialTheme.typography.bodySmall)
+                Spacer(Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Button(
+                        onClick = { statusMessage = "AI settings available from desktop build." },
+                        colors = pillButtonColors,
+                        shape = RoundedCornerShape(26.dp),
+                        modifier = Modifier.weight(1f).height(44.dp)
+                    ) {
+                        Icon(Icons.Default.Settings, contentDescription = "AI Settings")
+                        Spacer(Modifier.width(6.dp))
+                        Text("AI Settings")
+                    }
+                    Button(
+                        onClick = { showNoticeDialog = true },
+                        colors = pillButtonColors,
+                        shape = RoundedCornerShape(26.dp),
+                        modifier = Modifier.weight(1f).height(44.dp)
+                    ) {
+                        Icon(Icons.Default.Info, contentDescription = "Notice")
+                        Spacer(Modifier.width(6.dp))
+                        Text("Notice")
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Button(
+                        onClick = { performAnalysis(textToAnalyze) },
+                        enabled = !isLoading && (textToAnalyze.isNotBlank() || selectedMediaPath != null),
+                        colors = pillButtonColors,
+                        shape = RoundedCornerShape(26.dp),
+                        modifier = Modifier.weight(1f).height(44.dp)
+                    ) { Text("Analyze") }
+                    Button(
+                        onClick = { statusMessage = "Translate mode is not enabled in this mobile build." },
+                        colors = pillButtonColors,
+                        shape = RoundedCornerShape(26.dp),
+                        modifier = Modifier.weight(1f).height(44.dp)
+                    ) { Text("Translate") }
+                }
+
+                Spacer(Modifier.height(10.dp))
+
                 OutlinedTextField(
-                    value = textToAnalyze, 
-                    onValueChange = { textToAnalyze = it }, 
-                    label = { Text(if (selectedMediaPath != null) "Witness Statement / Claim Text" else "Legal Text") }, 
-                    modifier = Modifier.fillMaxWidth().weight(if (selectedMediaPath != null) 0.58f else 1f)
+                    value = textToAnalyze,
+                    onValueChange = { textToAnalyze = it },
+                    label = { Text(if (selectedMediaPath != null) "Supporting Statement / Claim Text" else "Report Text") },
+                    minLines = if (selectedMediaPath != null) 6 else 8,
+                    colors = textBoxColors,
+                    modifier = Modifier.fillMaxWidth().height(if (selectedMediaPath != null) 180.dp else 220.dp)
                 )
+
                 if (selectedMediaPath != null) {
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(10.dp))
                     OutlinedTextField(
                         value = manualTranscriptText,
                         onValueChange = { manualTranscriptText = it },
                         label = { Text("Transcript Override") },
-                        supportingText = {
-                            Text("Paste transcript text here if device audio transcription fails.")
-                        },
-                        modifier = Modifier.fillMaxWidth().weight(0.42f)
+                        supportingText = { Text("Paste transcript text here if device audio transcription fails.") },
+                        colors = textBoxColors,
+                        modifier = Modifier.fillMaxWidth().height(170.dp)
                     )
                 }
-                Spacer(Modifier.height(16.dp))
-                Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = { filePickerLauncher.launch("*/*") }, Modifier.weight(1f)) { Text("Open Doc") }
-                    Button(onClick = { performAnalysis(textToAnalyze) }, enabled = !isLoading && (textToAnalyze.isNotBlank() || selectedMediaPath != null), modifier = Modifier.weight(1f)) {
-                        if (isLoading) CircularProgressIndicator(Modifier.size(20.dp)) else Text("Analyze")
+
+                Spacer(Modifier.height(12.dp))
+
+                Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(10.dp)) {
+                    Button(
+                        onClick = { filePickerLauncher.launch("*/*") },
+                        colors = pillButtonColors,
+                        shape = RoundedCornerShape(26.dp),
+                        modifier = Modifier.weight(1f).height(44.dp)
+                    ) { Text("Open File") }
+                    Button(
+                        onClick = { performAnalysis(textToAnalyze) },
+                        enabled = !isLoading && (textToAnalyze.isNotBlank() || selectedMediaPath != null),
+                        colors = pillButtonColors,
+                        shape = RoundedCornerShape(26.dp),
+                        modifier = Modifier.weight(1f).height(44.dp)
+                    ) {
+                        if (isLoading) CircularProgressIndicator(Modifier.size(20.dp), color = NeonGreen) else Text("Analyze")
                     }
                 }
+
                 if (selectedMediaPath != null && !hasRecordAudioPermission.value) {
                     Spacer(Modifier.height(8.dp))
                     OutlinedButton(onClick = { recordPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO) }) {
                         Text("Enable Mic Permission")
                     }
                 }
-                Text(statusMessage, style = MaterialTheme.typography.bodySmall)
+
+                Spacer(Modifier.height(10.dp))
+
+                Surface(
+                    modifier = Modifier.fillMaxWidth().height(40.dp),
+                    color = Color.Black.copy(alpha = 0.78f),
+                    shape = RoundedCornerShape(22.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, NeonGreen.copy(alpha = 0.8f))
+                ) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
+                        Text(
+                            text = statusMessage,
+                            modifier = Modifier.padding(horizontal = 14.dp),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = NeonGreen
+                        )
+                    }
+                }
             } else {
                 ResultView(resultData!!, textToAnalyze, { performAnalysis(it) }) { resultData = null }
             }
@@ -698,6 +817,59 @@ private fun severityRank(level: String): Int = when (level.uppercase()) {
     else -> 0
 }
 
+private val NeonGreen = Color(0xFF8EFF77)
+
+private val DisclosureColorScheme = darkColorScheme(
+    background = Color(0xFF000000),
+    surface = Color(0xCC000000),
+    surfaceVariant = Color(0xE6000000),
+    primary = Color(0xFF000000),
+    onPrimary = NeonGreen,
+    primaryContainer = Color(0xFF000000),
+    onPrimaryContainer = NeonGreen,
+    secondary = Color(0xFF000000),
+    onSecondary = NeonGreen,
+    secondaryContainer = Color(0xFF000000),
+    onSecondaryContainer = NeonGreen,
+    tertiary = NeonGreen,
+    onTertiary = NeonGreen,
+    tertiaryContainer = Color(0xFF000000),
+    onTertiaryContainer = NeonGreen,
+    error = Color(0xFF000000),
+    onError = NeonGreen,
+    errorContainer = Color(0xFF000000),
+    onErrorContainer = NeonGreen,
+    onBackground = NeonGreen,
+    onSurface = NeonGreen,
+    onSurfaceVariant = Color(0xFF66CC66),
+    outline = Color(0xFF39FF14)
+)
+
+@Composable
+private fun HeroHeader(modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(20.dp)
+    ) {
+        Column(Modifier.fillMaxWidth().padding(14.dp)) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_launcher_logo_foreground),
+                contentDescription = "Phoenix logo",
+                modifier = Modifier.fillMaxWidth().height(180.dp),
+                contentScale = ContentScale.Fit
+            )
+            Spacer(Modifier.height(10.dp))
+            Text("phoenix_gemini", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(
+                "Simple report review with direct dictionary-backed output.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
 @Composable
 private fun AvResultView(
     resultsMap: Map<PyObject?, PyObject?>,
@@ -757,7 +929,7 @@ private fun AvResultView(
                                 .filter { it.isNotBlank() }
                                 .joinToString(", ")
 
-                            Text("Witness: $witnessSentence", style = MaterialTheme.typography.bodySmall)
+                            Text("Statement: $witnessSentence", style = MaterialTheme.typography.bodySmall)
                             Text("Transcript: $transcriptSentence", style = MaterialTheme.typography.bodySmall)
                             if (certainty.isNotBlank()) {
                                 Text("Certainty: $certainty", style = MaterialTheme.typography.bodySmall)
@@ -853,7 +1025,7 @@ private fun AvResultView(
             item {
                 Card(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
                     Column(Modifier.padding(12.dp)) {
-                        Text("Media Processing Errors", fontWeight = FontWeight.Bold, color = Color(0xFFB71C1C))
+                        Text("Media Processing Errors", fontWeight = FontWeight.Bold, color = NeonGreen)
                         mediaErrors.forEach { err ->
                             Text("• ${err?.toString().orEmpty()}", style = MaterialTheme.typography.bodySmall)
                         }
@@ -900,10 +1072,10 @@ fun ResultView(results: PyObject, textToAnalyze: String, onRescan: (String) -> U
     val tabTitles = listOf(
         "Summary",
         "Breaches",
-        "Officer Misconduct",
+        "State Conduct",
         "Human Rights",
         "Case Law",
-        "Parties"
+        "Participants"
     )
 
     val overallAssessment = pyGet(resultsMap, py, "overall_assessment")?.toString() ?: "No assessment"
@@ -933,48 +1105,60 @@ fun ResultView(results: PyObject, textToAnalyze: String, onRescan: (String) -> U
         pyGetString(party, py, "statement_count").toIntOrNull() ?: 0
     }
 
-    Column(Modifier.fillMaxSize()) {
-        Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-            Text("Analysis Results", style = MaterialTheme.typography.titleLarge)
-            Row {
-                TextButton(onClick = { onRescan(textToAnalyze) }) { Text("Redo") }
-                TextButton(onClick = onBack) { Text("Back") }
+    Card(
+        modifier = Modifier.fillMaxSize(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        shape = RoundedCornerShape(20.dp)
+    ) {
+        Column(Modifier.fillMaxSize().padding(14.dp)) {
+            Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
+                Text("Analysis Results", style = MaterialTheme.typography.titleLarge)
+                Row {
+                    TextButton(onClick = { onRescan(textToAnalyze) }) { Text("Redo") }
+                    TextButton(onClick = onBack) { Text("Back") }
+                }
             }
-        }
-        Divider(Modifier.padding(vertical = 8.dp))
+            Divider(Modifier.padding(vertical = 8.dp))
 
-        ScrollableTabRow(selectedTabIndex = selectedTab, edgePadding = 0.dp) {
-            tabTitles.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTab == index,
-                    onClick = { selectedTab = index },
-                    text = { Text(title) }
-                )
-            }
-        }
+            Row(Modifier.fillMaxSize()) {
+                Card(
+                    modifier = Modifier.width(152.dp).fillMaxHeight(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        Modifier.fillMaxSize().padding(10.dp).verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        tabTitles.forEachIndexed { index, title ->
+                            FilledTonalButton(
+                                onClick = { selectedTab = index },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.filledTonalButtonColors(
+                                    containerColor = if (selectedTab == index) {
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceVariant
+                                    }
+                                )
+                            ) {
+                                Text(title)
+                            }
+                        }
+                    }
+                }
 
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "${selectedTab + 1}/${tabTitles.size}: ${tabTitles[selectedTab]}",
-                style = MaterialTheme.typography.bodySmall
-            )
-            Row {
-                TextButton(
-                    enabled = selectedTab > 0,
-                    onClick = { selectedTab -= 1 }
-                ) { Text("Prev Tab") }
-                TextButton(
-                    enabled = selectedTab < tabTitles.lastIndex,
-                    onClick = { selectedTab += 1 }
-                ) { Text("Next Tab") }
-            }
-        }
+                Spacer(Modifier.width(12.dp))
 
-        when (selectedTab) {
+                Column(Modifier.weight(1f).fillMaxHeight()) {
+                    Text(
+                        text = "${selectedTab + 1}/${tabTitles.size}: ${tabTitles[selectedTab]}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(8.dp))
+
+                    when (selectedTab) {
             0 -> {
                 LazyColumn(Modifier.weight(1f)) {
                     item {
@@ -987,7 +1171,7 @@ fun ResultView(results: PyObject, textToAnalyze: String, onRescan: (String) -> U
                             Column(Modifier.padding(12.dp)) {
                                 Text("Fact-check flow", fontWeight = FontWeight.Bold)
                                 Text("1. Review top Charter breach cards by confidence.", style = MaterialTheme.typography.bodySmall)
-                                Text("2. Open Officer Misconduct tab for duty-to-consider-evidence findings.", style = MaterialTheme.typography.bodySmall)
+                                Text("2. Open State Conduct for duty-to-consider-evidence findings.", style = MaterialTheme.typography.bodySmall)
                                 Text("3. Open Human Rights tab for UN/Canada/Ontario layered flags.", style = MaterialTheme.typography.bodySmall)
                                 Text("4. Cross-check missing evidence claims against the source document text.", style = MaterialTheme.typography.bodySmall)
                                 Text("5. Open Case Law tab for direct case links and section-specific sources.", style = MaterialTheme.typography.bodySmall)
@@ -1061,9 +1245,9 @@ fun ResultView(results: PyObject, textToAnalyze: String, onRescan: (String) -> U
                     item {
                         Card(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                             Column(Modifier.padding(12.dp)) {
-                                Text("Officer Misconduct Assessment", fontWeight = FontWeight.Bold)
+                                Text("State Conduct Assessment", fontWeight = FontWeight.Bold)
                                 if (officerConduct == null && badFaith == null) {
-                                    Text("No officer misconduct assessment was generated for this record.")
+                                    Text("No state-conduct assessment was generated for this record.")
                                 } else {
                                     officerConduct?.let { oc ->
                                         val seriousness = pyGetString(oc, py, "seriousness")
@@ -1085,7 +1269,7 @@ fun ResultView(results: PyObject, textToAnalyze: String, onRescan: (String) -> U
 
                                     badFaith?.let { bf ->
                                         Spacer(Modifier.height(10.dp))
-                                        Text("Bad Faith Policing", fontWeight = FontWeight.Bold)
+                                        Text("Official Bad Faith", fontWeight = FontWeight.Bold)
                                         Text("Level: ${pyGetString(bf, py, "level")} (score ${pyGetString(bf, py, "score")})",
                                             style = MaterialTheme.typography.bodySmall)
                                         Text("Legal Basis: ${pyGetString(bf, py, "legal_basis")}", style = MaterialTheme.typography.bodySmall)
@@ -1115,7 +1299,7 @@ fun ResultView(results: PyObject, textToAnalyze: String, onRescan: (String) -> U
                                         Text("Severity: $severity", style = MaterialTheme.typography.bodySmall)
                                         Text("Source: $source", style = MaterialTheme.typography.bodySmall)
                                         if (summary.isNotBlank()) Text(summary, style = MaterialTheme.typography.bodySmall)
-                                        if (url.isNotBlank()) Text(url, style = MaterialTheme.typography.bodySmall, color = Color(0xFF1565C0))
+                                        if (url.isNotBlank()) Text(url, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
                                     }
                                 }
                             }
@@ -1274,7 +1458,7 @@ fun ResultView(results: PyObject, textToAnalyze: String, onRescan: (String) -> U
                                                 if (pinpoint.isNotBlank()) {
                                                     Text("  Pinpoint: $pinpoint", style = MaterialTheme.typography.bodySmall)
                                                 }
-                                                Text("  $locationLabel: $url", style = MaterialTheme.typography.bodySmall, color = Color(0xFF1565C0))
+                                                Text("  $locationLabel: $url", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
                                             }
                                         }
 
@@ -1286,7 +1470,7 @@ fun ResultView(results: PyObject, textToAnalyze: String, onRescan: (String) -> U
                                                 val citation = pyGetString(link, py, "citation")
                                                 val url = pyGetString(link, py, "url")
                                                 if (citation.isNotBlank()) Text("• $citation", style = MaterialTheme.typography.bodySmall)
-                                                if (url.isNotBlank()) Text("  $url", style = MaterialTheme.typography.bodySmall, color = Color(0xFF1565C0))
+                                                if (url.isNotBlank()) Text("  $url", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
                                             }
                                         }
 
@@ -1294,13 +1478,13 @@ fun ResultView(results: PyObject, textToAnalyze: String, onRescan: (String) -> U
                                             Spacer(Modifier.height(8.dp))
                                             Text("CanLII search links", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
                                             searchUrlPairs.forEach { (name, url) ->
-                                                Text("• $name: $url", style = MaterialTheme.typography.bodySmall, color = Color(0xFF1565C0))
+                                                Text("• $name: $url", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
                                             }
                                         }
 
                                         if (clnReference.isNotBlank()) {
                                             Spacer(Modifier.height(8.dp))
-                                            Text("Criminal Law Notebook: $clnReference", style = MaterialTheme.typography.bodySmall, color = Color(0xFF1565C0))
+                                            Text("Criminal Law Notebook: $clnReference", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
                                         }
                                     }
                                 }
@@ -1314,7 +1498,7 @@ fun ResultView(results: PyObject, textToAnalyze: String, onRescan: (String) -> U
                     item {
                         Card(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                             Column(Modifier.padding(12.dp)) {
-                                Text("Party and Narrative Extraction", fontWeight = FontWeight.Bold)
+                                Text("Participant and Narrative Extraction", fontWeight = FontWeight.Bold)
                                 if (caseCaption.isNotBlank()) {
                                     Text("Case caption: $caseCaption", style = MaterialTheme.typography.bodySmall)
                                 }
@@ -1355,7 +1539,7 @@ fun ResultView(results: PyObject, textToAnalyze: String, onRescan: (String) -> U
 
                                 Card(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                                     Column(Modifier.padding(12.dp)) {
-                                        Text(name.ifBlank { "Unnamed Party" }, fontWeight = FontWeight.Bold)
+                                        Text(name.ifBlank { "Unnamed Participant" }, fontWeight = FontWeight.Bold)
                                         Text("Primary role: $role", style = MaterialTheme.typography.bodySmall)
                                         if (rolesList.isNotBlank()) {
                                             Text("All roles: $rolesList", style = MaterialTheme.typography.bodySmall)
@@ -1364,9 +1548,9 @@ fun ResultView(results: PyObject, textToAnalyze: String, onRescan: (String) -> U
                                             Text("Context: $contextTags", style = MaterialTheme.typography.bodySmall)
                                         }
                                         Spacer(Modifier.height(6.dp))
-                                        Text("What they say happened (exact excerpts):", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                                        Text("Captured excerpts:", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
                                         if (statements.isEmpty()) {
-                                            Text("No direct statement verb was detected for this party.", style = MaterialTheme.typography.bodySmall)
+                                            Text("No direct statement verb was detected for this participant.", style = MaterialTheme.typography.bodySmall)
                                         } else {
                                             statements.forEach { s ->
                                                 Text("• ${s?.toString().orEmpty()}", style = MaterialTheme.typography.bodySmall)
@@ -1378,6 +1562,9 @@ fun ResultView(results: PyObject, textToAnalyze: String, onRescan: (String) -> U
                         }
                     }
                 }
+            }
+        }
+    }
             }
         }
     }
