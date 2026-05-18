@@ -56,7 +56,7 @@ project_phoenix is a comprehensive legal analysis suite designed for both **Andr
    ```
 2. **Launch:**
    ```bash
-   python run.py
+   phoenix_gemini
    ```
 
 ### 📱 Android
